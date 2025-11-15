@@ -33,7 +33,7 @@ class UserAcceptanceTest extends AcceptanceTestBase {
                                 fieldWithPath("age").description("사용자 나이")
                         ),
                         responseFields(
-                                fieldWithPath("id").description("사용자 ID")
+                                fieldWithPath("id").description("생성된 사용자의 PK")
                         )
                 ));
     }
