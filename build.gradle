@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.7'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'com.epages.restdocs-api-spec' version '0.19.2'
 }
 
 group = 'wonjun'
@@ -44,6 +45,7 @@ dependencies {
     // Test dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.19.2'
     testImplementation 'org.testcontainers:testcontainers:1.19.3'
     testImplementation 'org.testcontainers:mysql:1.19.3'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
@@ -56,6 +58,16 @@ dependencies {
 tasks.named('test') {
     outputs.dir snippetsDir
     useJUnitPlatform()
+}
+
+// OpenAPI 스펙 생성 설정
+openapi3 {
+    server = 'http://localhost:8080'
+    title = 'API 문서'
+    description = 'Spring Boot REST API 문서'
+    version = '1.0.0'
+    format = 'yaml'
+    outputDirectory = 'src/main/resources/static/docs'
 }
 
 asciidoctor {
@@ -76,13 +88,33 @@ task copyDocument(type: Copy) {
     into file("src/main/resources/static/docs")
 }
 
+task copyOasToSwagger(type: Copy) {
+    dependsOn 'openapi3'
+    from "src/main/resources/static/docs/openapi3.yaml"
+    into "src/main/resources/static/"
+
+    doFirst {
+        def sourceFile = file("src/main/resources/static/docs/openapi3.yaml")
+        if (!sourceFile.exists()) {
+            logger.warn("openapi3.yaml not found at ${sourceFile.absolutePath}")
+        }
+    }
+}
+
 build {
     dependsOn copyDocument
+    finalizedBy copyOasToSwagger
 }
 
 bootJar {
-    dependsOn asciidoctor
+    dependsOn copyDocument
+    dependsOn 'openapi3'
+
     from("${asciidoctor.outputDir}") {
         into 'static/docs'
+    }
+    from("src/main/resources/static/docs") {
+        include 'openapi3.yaml'
+        into 'static'
     }
 }

@@ -1,5 +1,10 @@
 package wonjun.stiky.acceptance;
 
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,8 +25,6 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -65,7 +68,7 @@ public abstract class AcceptanceTestBase {
 
     protected RestDocumentationResultHandler document(String identifier,
                                                       org.springframework.restdocs.snippet.Snippet... snippets) {
-        return MockMvcRestDocumentation.document(identifier,
+        return MockMvcRestDocumentationWrapper.document(identifier,
                 preprocessRequest(prettyPrint()),
                 preprocessResponse(prettyPrint()),
                 snippets);
