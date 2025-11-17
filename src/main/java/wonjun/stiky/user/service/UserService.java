@@ -1,7 +1,5 @@
 package wonjun.stiky.user.service;
 
-import io.swagger.v3.oas.annotations.servers.Server;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import wonjun.stiky.user.controller.dto.request.CreateUserRequest;
