@@ -16,4 +16,8 @@ public class MemberRepository {
                 .orElseThrow(() -> new RuntimeException("TODO"));
     }
 
+    public Member save(Member member) {
+        return memberJpaRepository.save(member);
+    }
+
 }
