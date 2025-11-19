@@ -42,4 +42,9 @@ public class Member {
         this.providerId = providerId;
     }
 
+    public void updateSocialInfo(String provider, String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
+    }
+
 }
