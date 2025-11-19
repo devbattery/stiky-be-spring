@@ -28,7 +28,7 @@ public class Member {
     private String role;
 
     private String provider;
-    private String providerId;
+    private String providerId; // google "sub"
 
     @Builder
     private Member(Long id, String email, String password, String nickname, String role, String provider,

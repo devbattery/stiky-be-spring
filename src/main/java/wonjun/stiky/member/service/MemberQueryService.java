@@ -9,12 +9,17 @@ import wonjun.stiky.member.repository.MemberRepository;
 @Transactional
 @Service
 @RequiredArgsConstructor
-public class MemberSaveService {
+public class MemberQueryService {
 
     private final MemberRepository memberRepository;
 
     public Member save(Member member) {
         return memberRepository.save(member);
+    }
+
+    @Transactional(readOnly = true)
+    public Member fetchByEmail(String email) {
+        return memberRepository.findByEmail(email);
     }
 
 }
