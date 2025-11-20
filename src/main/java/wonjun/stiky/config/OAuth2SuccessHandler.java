@@ -23,7 +23,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = (String) oAuth2User.getAttributes().get("email");
 
-        String token = jwtTokenProvider.createToken(email, "ROLE_USER");
+        String token = jwtTokenProvider.generateToken(email, "ROLE_USER");
 
         String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080/login-success")
                 .queryParam("token", token)

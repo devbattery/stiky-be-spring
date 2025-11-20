@@ -16,26 +16,34 @@ import org.springframework.stereotype.Component;
 public class JwtTokenProvider {
 
     private final Key key;
-    private final long validityInMilliseconds;
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30; // 30분
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 30 * 24 * 7; // 7일
 
-    public JwtTokenProvider(@Value("${jwt.secret}") String secret,
-                            @Value("${jwt.expiration}") long validityInMilliseconds) {
+    public JwtTokenProvider(@Value("${jwt.secret}") String secret) {
         byte[] keyBytes = Base64.getDecoder().decode(secret);
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.validityInMilliseconds = validityInMilliseconds;
     }
 
-    public String createToken(String email, String role) {
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("role", role);
+    public TokenDto generateToken(String email, String role) {
+        long now = (new Date()).getTime();
+        String accessToken = generateAccessToken(email, role, now);
+        String refreshToken = generateRefreshToken(now);
+        return TokenDto.from(accessToken, refreshToken);
+    }
 
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + validityInMilliseconds);
-
+    private String generateAccessToken(String email, String role, long now) {
+        Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(validity)
+                .setSubject(email)
+                .claim("role", role)
+                .setExpiration(accessTokenExpiresIn)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    private String generateRefreshToken(long now) {
+        return Jwts.builder()
+                .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
