@@ -1,6 +1,5 @@
 package wonjun.stiky.config;
 
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -19,33 +18,31 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
-
-        String provider = userRequest.getClientRegistration().getRegistrationId(); // "google"
+        String registrationId = userRequest.getClientRegistration().getRegistrationId(); // "google"
         String userNameAttributeName = userRequest.getClientRegistration()
                 .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName(); // google "sub"
+        OAuthAttributes attributes = OAuthAttributes.of(registrationId, userNameAttributeName,
+                oAuth2User.getAttributes());
 
-        Map<String, Object> attributes = oAuth2User.getAttributes();
+        update(attributes);
+        return oAuth2User;
+    }
 
-        String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
-        String providerId = oAuth2User.getName(); // google "sub"
-
+    private void update(OAuthAttributes attributes) {
         try {
-            Member foundMember = memberQueryService.fetchByEmail(email);
-            foundMember.updateSocialInfo(provider, providerId);
+            Member foundMember = memberQueryService.fetchByEmail(attributes.getEmail());
+            foundMember.updateSocialInfo(attributes.getProvider(), attributes.getNameAttributeKey());
             memberQueryService.save(foundMember);
         } catch (RuntimeException e) { // TODO: fetchByEmail의 customException으로 변경
             Member member = Member.builder()
-                    .email(email)
-                    .nickname(name) // TODO: 사용자가 온보딩 때 바꿀 수 있도록
+                    .email(attributes.getEmail())
+                    .nickname(attributes.getName()) // TODO: 사용자가 온보딩 때 바꿀 수 있도록
                     .role("ROLE_USER")
-                    .provider(provider)
-                    .providerId(providerId)
+                    .provider(attributes.getProvider())
+                    .providerId(attributes.getNameAttributeKey())
                     .build();
             memberQueryService.save(member);
         }
-
-        return oAuth2User;
     }
 
 }
