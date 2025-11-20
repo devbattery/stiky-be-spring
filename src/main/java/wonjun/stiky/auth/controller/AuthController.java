@@ -22,7 +22,7 @@ public class AuthController {
         String accessToken = (String) redisTemplate.opsForValue().get(redisKey);
 
         if (accessToken == null) {
-            return ResponseEntity.badRequest().body("잘못되었거나 만료된 임시 코드입니다.")
+            return ResponseEntity.badRequest().body("잘못되었거나 만료된 임시 코드입니다.");
         }
 
         redisTemplate.delete(redisKey);
