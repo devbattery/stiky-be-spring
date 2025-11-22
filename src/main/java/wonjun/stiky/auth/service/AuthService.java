@@ -1,7 +1,9 @@
 package wonjun.stiky.auth.service;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ public class AuthService {
     private final MemberQueryService memberQueryService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public SignupResponse signup(SignupRequest request) {
         if (!Objects.isNull(memberQueryService.fetchByEmail(request.getEmail()))) {
@@ -46,7 +49,12 @@ public class AuthService {
             throw new IllegalArgumentException("잘못된 비밀번호."); // TODO: 커스텀 예외처리
         }
 
-        return jwtTokenProvider.generateToken(member.getEmail(), member.getRole());
+        TokenDto tokenDto = jwtTokenProvider.generateToken(member.getEmail(), member.getRole());
+
+        redisTemplate.opsForValue()
+                .set("RT:" + member.getEmail(), tokenDto.getRefreshToken(), 7, TimeUnit.DAYS);
+
+        return tokenDto;
     }
 
 }
