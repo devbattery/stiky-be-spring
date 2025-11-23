@@ -7,9 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import wonjun.stiky.auth.controller.dto.request.LoginRequest;
 import wonjun.stiky.auth.controller.dto.request.SignupRequest;
 import wonjun.stiky.auth.controller.dto.response.SignupResponse;
 import wonjun.stiky.auth.service.AuthService;
+import wonjun.stiky.config.TokenDto;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,6 +19,16 @@ public class AuthController {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final AuthService authService;
+
+    @PostMapping("/api/auth/signup")
+    public ResponseEntity<SignupResponse> signup(@RequestBody SignupRequest request) {
+        return ResponseEntity.ok(authService.signup(request));
+    }
+
+    @PostMapping("/api/auth/login")
+    public ResponseEntity<TokenDto> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
+    }
 
     @PostMapping("/api/auth/token")
     public ResponseEntity<?> getToken(@RequestBody Map<String, String> request) {
@@ -32,11 +44,6 @@ public class AuthController {
         redisTemplate.delete(redisKey);
 
         return ResponseEntity.ok(Map.of("accessToken", accessToken));
-    }
-
-    @PostMapping("/api/auth/signup")
-    public ResponseEntity<SignupResponse> signup(@RequestBody SignupRequest request) {
-        return ResponseEntity.ok(authService.signup(request));
     }
 
 }
