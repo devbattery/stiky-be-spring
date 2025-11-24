@@ -35,6 +35,45 @@ class AuthAcceptanceTest extends AcceptanceTestBase {
     private MemberRepository memberRepository;
 
     @Test
+    @DisplayName("OAuth2 인증 코드로 액세스 토큰 교환 API")
+    void exchangeToken() throws Exception {
+        // Given
+        // 1. 가상의 인증 코드 생성
+        String code = UUID.randomUUID().toString();
+        String expectedAccessToken = "mock-access-token-12345";
+
+        // 2. Redis에 인증 코드와 토큰 매핑 저장 (OAuth2SuccessHandler가 수행하는 작업을 시뮬레이션)
+        redisTemplate.opsForValue().set("LOGIN_CODE:" + code, expectedAccessToken, 60, TimeUnit.SECONDS);
+
+        Map<String, String> requestMap = new HashMap<>();
+        requestMap.put("code", code);
+        String requestBody = objectMapper.writeValueAsString(requestMap);
+
+        // When & Then
+        mockMvc.perform(post("/api/auth/token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value(expectedAccessToken))
+                .andDo(document("auth-exchange-token",
+                        resource(ResourceSnippetParameters.builder()
+                                .tag("Auth")
+                                .summary("토큰 교환")
+                                .description("OAuth2 로그인 후 발급받은 임시 코드로 액세스 토큰을 교환합니다.")
+                                .requestSchema(Schema.schema("TokenExchangeRequest"))
+                                .responseSchema(Schema.schema("TokenExchangeResponse"))
+                                .requestFields(
+                                        fieldWithPath("code").description("OAuth2 리다이렉트 시 받은 임시 코드")
+                                )
+                                .responseFields(
+                                        fieldWithPath("accessToken").description("JWT 액세스 토큰")
+                                )
+                                .build())
+                ));
+    }
+
+
+    @Test
     @DisplayName("일반 로그인 API")
     void login() throws Exception {
         // Given
