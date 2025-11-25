@@ -1,5 +1,6 @@
 package wonjun.stiky.member.repository;
 
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import wonjun.stiky.member.domain.Member;
@@ -11,9 +12,8 @@ public class MemberRepository {
 
     private final MemberJpaRepository memberJpaRepository;
 
-    public Member findByEmail(String email) {
-        return memberJpaRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("TODO"));
+    public Optional<Member> findByEmail(String email) {
+        return memberJpaRepository.findByEmail(email);
     }
 
     public Member save(Member member) {
