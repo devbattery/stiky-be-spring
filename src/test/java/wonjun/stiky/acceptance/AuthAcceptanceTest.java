@@ -72,6 +72,37 @@ class AuthAcceptanceTest extends AcceptanceTestBase {
                 ));
     }
 
+    @Test
+    @DisplayName("일반 회원가입 API")
+    void signup() throws Exception {
+        // Given
+        String requestBody = """
+                {
+                    "email": "wonjun@example.com",
+                    "password": "password1234",
+                    "nickname": "원준"
+                }
+                """;
+
+        // When & Then
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isCreated())
+                .andDo(document("auth-signup",
+                        resource(ResourceSnippetParameters.builder()
+                                .tag("Auth")
+                                .summary("일반 회원가입")
+                                .description("이메일과 비밀번호로 회원가입을 진행합니다.")
+                                .requestSchema(Schema.schema("SignupRequest"))
+                                .requestFields(
+                                        fieldWithPath("email").description("이메일"),
+                                        fieldWithPath("password").description("비밀번호"),
+                                        fieldWithPath("nickname").description("이름")
+                                )
+                                .build())
+                ));
+    }
 
     @Test
     @DisplayName("일반 로그인 API")

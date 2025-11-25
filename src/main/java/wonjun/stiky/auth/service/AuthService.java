@@ -1,6 +1,5 @@
 package wonjun.stiky.auth.service;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,7 +25,7 @@ public class AuthService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public SignupResponse signup(SignupRequest request) {
-        if (!Objects.isNull(memberQueryService.fetchByEmail(request.getEmail()))) {
+        if (memberQueryService.fetchByEmailOpt(request.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이미 가입된 계정"); // TODO: 커스텀 예외처리
         }
 
