@@ -9,11 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import wonjun.stiky.auth.controller.dto.TokenDto;
 import wonjun.stiky.auth.controller.dto.request.LoginRequest;
 import wonjun.stiky.auth.controller.dto.request.SignupRequest;
 import wonjun.stiky.auth.controller.dto.response.SignupResponse;
 import wonjun.stiky.auth.service.AuthService;
-import wonjun.stiky.auth.controller.dto.TokenDto;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class AuthController {
     }
 
     @PostMapping("/api/auth/login")
-    public ResponseEntity<TokenDto> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<TokenDto> login(@RequestBody @Valid LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
