@@ -1,4 +1,4 @@
-package wonjun.stiky.config;
+package wonjun.stiky.auth.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;

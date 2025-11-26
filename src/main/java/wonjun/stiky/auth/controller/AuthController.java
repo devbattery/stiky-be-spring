@@ -13,7 +13,7 @@ import wonjun.stiky.auth.controller.dto.request.LoginRequest;
 import wonjun.stiky.auth.controller.dto.request.SignupRequest;
 import wonjun.stiky.auth.controller.dto.response.SignupResponse;
 import wonjun.stiky.auth.service.AuthService;
-import wonjun.stiky.config.TokenDto;
+import wonjun.stiky.auth.controller.dto.TokenDto;
 
 @RestController
 @RequiredArgsConstructor

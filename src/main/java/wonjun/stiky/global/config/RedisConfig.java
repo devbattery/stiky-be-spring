@@ -1,4 +1,4 @@
-package wonjun.stiky.config;
+package wonjun.stiky.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

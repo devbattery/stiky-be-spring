@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import wonjun.stiky.auth.controller.dto.request.LoginRequest;
 import wonjun.stiky.auth.controller.dto.request.SignupRequest;
 import wonjun.stiky.auth.controller.dto.response.SignupResponse;
-import wonjun.stiky.config.JwtTokenProvider;
-import wonjun.stiky.config.TokenDto;
+import wonjun.stiky.auth.config.JwtTokenProvider;
+import wonjun.stiky.auth.controller.dto.TokenDto;
 import wonjun.stiky.member.domain.Member;
 import wonjun.stiky.member.service.MemberQueryService;
 

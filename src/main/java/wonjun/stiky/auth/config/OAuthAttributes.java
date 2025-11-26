@@ -1,4 +1,4 @@
-package wonjun.stiky.config;
+package wonjun.stiky.auth.config;
 
 import java.util.Map;
 import lombok.Builder;

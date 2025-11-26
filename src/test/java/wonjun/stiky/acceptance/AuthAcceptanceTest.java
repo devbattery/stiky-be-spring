@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import wonjun.stiky.config.JwtTokenProvider;
+import wonjun.stiky.auth.config.JwtTokenProvider;
 import wonjun.stiky.member.domain.Member;
 import wonjun.stiky.member.repository.MemberRepository;
 

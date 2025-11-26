@@ -1,4 +1,4 @@
-package wonjun.stiky.config;
+package wonjun.stiky.auth.controller.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

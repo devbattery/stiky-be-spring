@@ -1,4 +1,4 @@
-package wonjun.stiky.config;
+package wonjun.stiky.auth.config;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -10,6 +10,7 @@ import java.util.Base64;
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import wonjun.stiky.auth.controller.dto.TokenDto;
 
 @Component
 public class JwtTokenProvider {

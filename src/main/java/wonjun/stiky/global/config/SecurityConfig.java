@@ -1,4 +1,4 @@
-package wonjun.stiky.config;
+package wonjun.stiky.global.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +11,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import wonjun.stiky.auth.config.CustomOAuth2UserService;
+import wonjun.stiky.auth.config.CustomUserDetailsService;
+import wonjun.stiky.auth.config.JwtAuthenticationFilter;
+import wonjun.stiky.auth.config.JwtTokenProvider;
+import wonjun.stiky.auth.config.OAuth2SuccessHandler;
 
 @Configuration
 @RequiredArgsConstructor

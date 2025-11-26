@@ -1,4 +1,4 @@
-package wonjun.stiky.config;
+package wonjun.stiky.auth.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
