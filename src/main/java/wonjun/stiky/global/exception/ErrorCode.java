@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     // Common
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C001", "서버에 오류가 발생했습니다."),
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "입력값이 올바르지 않습니다."),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C002", "허용되지 않은 메서드입니다."),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C003", "서버에 오류가 발생했습니다."),
 
     // Auth
     EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "A001", "이미 가입된 이메일입니다."),
