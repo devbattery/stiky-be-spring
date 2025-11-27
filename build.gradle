@@ -77,11 +77,10 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-// OpenAPI 스펙 생성 설정
 openapi3 {
-    server = 'http://localhost:8080'
-    title = 'API 문서'
-    description = 'Spring Boot REST API 문서'
+    server = 'https://www.stiky.site'
+    title = 'Stiky API'
+    description = 'API 설명'
     version = '1.0.0'
     format = 'yaml'
     outputDirectory = 'src/main/resources/static/docs'
