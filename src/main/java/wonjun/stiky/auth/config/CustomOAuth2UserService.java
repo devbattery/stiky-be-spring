@@ -6,6 +6,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import wonjun.stiky.global.exception.CustomException;
 import wonjun.stiky.member.domain.Member;
 import wonjun.stiky.member.service.MemberQueryService;
 
@@ -33,7 +34,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             Member foundMember = memberQueryService.fetchByEmail(attributes.getEmail());
             foundMember.updateSocialInfo(attributes.getProvider(), attributes.getNameAttributeKey());
             memberQueryService.save(foundMember);
-        } catch (RuntimeException e) { // TODO: fetchByEmail의 customException으로 변경
+        } catch (CustomException e) {
             Member member = Member.builder()
                     .email(attributes.getEmail())
                     .nickname(attributes.getName()) // TODO: 사용자가 온보딩 때 바꿀 수 있도록
