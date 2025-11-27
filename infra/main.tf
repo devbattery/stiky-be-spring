@@ -109,7 +109,6 @@ resource "google_cloud_run_v2_service" "default" {
     containers {
       # 나중에 GitHub Actions가 진짜 이미지로 덮어씌웁니다.
       image = "us-docker.pkg.dev/cloudrun/container/hello"
-      # image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.name}/stiky-api:latest"
 
       ports { container_port = 8080 }
 
@@ -177,7 +176,9 @@ resource "google_cloud_run_v2_service" "default" {
     ignore_changes = [
       client,
       client_version,
-      template[0].containers[0].image
+      template[0].containers[0].image,
+      template[0].labels,
+      template[0].annotations
     ]
   }
 }
