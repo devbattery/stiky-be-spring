@@ -17,7 +17,6 @@ import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation;
 import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,7 +33,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureRestDocs
 @ExtendWith(RestDocumentationExtension.class)
 @Testcontainers
-@ActiveProfiles("test")
 public abstract class AcceptanceTestBase {
 
     @Autowired
@@ -66,6 +64,13 @@ public abstract class AcceptanceTestBase {
         // Redis
         registry.add("spring.data.redis.host", redisContainer::getHost);
         registry.add("spring.data.redis.port", () -> redisContainer.getMappedPort(6379));
+
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+        registry.add("spring.jpa.show-sql", () -> "true");
+
+        registry.add("jwt.secret", () -> "VGhpcyBpcyBhIGRhbW4gbG9uZyBzZWNyZXQga2V5IGZvciB0ZXN0aW5nIG9ubHk=");
+        registry.add("spring.security.oauth2.client.registration.google.client-id", () -> "test-client-id");
+        registry.add("spring.security.oauth2.client.registration.google.client-secret", () -> "test-client-secret");
     }
 
     @BeforeEach
