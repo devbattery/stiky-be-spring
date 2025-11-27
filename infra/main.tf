@@ -6,7 +6,6 @@ terraform {
     }
   }
   backend "gcs" {
-    # [주의] 본인의 버킷 이름으로 유지하세요!
     bucket  = "stiky-terraform-state-wonjun"
     prefix  = "prod"
   }
@@ -15,6 +14,11 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
+}
+
+# Secret Manager에 저장된 DB 비밀번호 값을 가져옴
+data "google_secret_manager_secret_version" "db_pass" {
+  secret = "DB_PASS"
 }
 
 # 0. VPC 네트워크 설정 (Private IP 사용을 위한 필수 설정)
@@ -72,7 +76,7 @@ resource "google_sql_database" "database" {
 resource "google_sql_user" "users" {
   name     = "wonjun"
   instance = google_sql_database_instance.master.name
-  password = "temp-password"
+  password = data.google_secret_manager_secret_version.db_pass.secret_data
 }
 
 # 3. Redis (Memorystore)
