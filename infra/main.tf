@@ -182,3 +182,77 @@ resource "google_cloud_run_v2_service" "default" {
     ]
   }
 }
+
+
+# 1. 고정 IP 예약 (로드밸런서용)
+resource "google_compute_global_address" "lb_ip" {
+  name = "stiky-lb-ip"
+}
+
+# 2. Serverless NEG (Network Endpoint Group)
+# 로드밸런서가 Cloud Run을 찾을 수 있게 해주는 그룹
+resource "google_compute_region_network_endpoint_group" "cloudrun_neg" {
+  name                  = "stiky-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+
+  cloud_run {
+    service = google_cloud_run_v2_service.default.name
+  }
+}
+
+# 3. 백엔드 서비스 (Backend Service)
+# 로드밸런서가 트래픽을 NEG로 보낼 때의 설정
+resource "google_compute_backend_service" "lb_backend" {
+  name                  = "stiky-backend-service"
+  protocol              = "HTTP"
+  port_name             = "http"
+  load_balancing_scheme = "EXTERNAL"
+  timeout_sec           = 30
+
+  backend {
+    group = google_compute_region_network_endpoint_group.cloudrun_neg.id
+  }
+}
+
+# 4. URL 맵 (URL Map)
+# 어떤 주소로 들어오면 어디로 보낼지 결정 (여기서는 모든 요청을 백엔드로)
+resource "google_compute_url_map" "lb_url_map" {
+  name            = "stiky-url-map"
+  default_service = google_compute_backend_service.lb_backend.id
+}
+
+# 5. 구글 관리형 SSL 인증서 (HTTPS)
+# api.stiky.site 도메인에 대한 인증서를 자동 발급
+resource "google_compute_managed_ssl_certificate" "lb_cert" {
+  name = "stiky-api-cert"
+
+  managed {
+    domains = ["api.stiky.site"]
+  }
+}
+
+# 6. HTTPS 프록시 (Target HTTPS Proxy)
+# 인증서와 URL 맵을 연결
+resource "google_compute_target_https_proxy" "lb_https_proxy" {
+  name             = "stiky-https-proxy"
+  url_map          = google_compute_url_map.lb_url_map.id
+  ssl_certificates = [google_compute_managed_ssl_certificate.lb_cert.id]
+}
+
+# 7. 포워딩 룰 (Global Forwarding Rule)
+# 전세계 어디서든 443 포트(HTTPS)로 들어오는 요청을 처리
+resource "google_compute_global_forwarding_rule" "lb_forwarding_rule" {
+  name       = "stiky-https-forwarding-rule"
+  target     = google_compute_target_https_proxy.lb_https_proxy.id
+  port_range = "443"
+  ip_address = google_compute_global_address.lb_ip.id
+}
+
+# 8. HTTP -> HTTPS 리다이렉트용 프록시
+# 80 포트로 들어오면 443으로 튕겨내는 설정 (필요하면 추가)
+
+# 9. 생성된 IP 주소 출력 (나중에 Cloud DNS에 넣어야 함)
+output "load_balancer_ip" {
+  value = google_compute_global_address.lb_ip.address
+}
