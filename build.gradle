@@ -34,7 +34,6 @@ ext {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // Swagger UI
@@ -72,9 +71,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
+// 1. 테스트 설정
 tasks.named('test') {
     outputs.dir snippetsDir
     useJUnitPlatform()
+
+    // [중요] 테스트 실행 시 무조건 'test' 프로필 사용
+    systemProperty 'spring.profiles.active', 'test'
 
     testLogging {
         events "passed", "skipped", "failed"
@@ -83,27 +86,27 @@ tasks.named('test') {
     }
 }
 
+// 2. OpenAPI 스펙 생성 설정 (Extension 설정)
 openapi3 {
     server = 'https://api.stiky.site'
     title = 'Stiky API'
-    description = 'API 설명'
+    description = 'Stiky API 명세서'
     version = '1.0.0'
     format = 'yaml'
-    outputDirectory = 'src/main/resources/static/docs'
+    // 생성 위치를 build 폴더로 변경
+    outputDirectory = 'build/api-spec'
 }
 
+// 3. AsciiDoctor 설정
 asciidoctor {
     inputs.dir snippetsDir
     configurations 'asciidoctorExt'
     dependsOn test
 
     baseDirFollowsSourceFile()
-
-    doFirst {
-        delete file('src/main/resources/static/docs')
-    }
 }
 
+// 4. 문서 복사 태스크
 task copyDocument(type: Copy) {
     dependsOn asciidoctor
     from file("build/docs/asciidoc")
@@ -111,26 +114,28 @@ task copyDocument(type: Copy) {
 }
 
 task copyOasToSwagger(type: Copy) {
+    // openapi3 태스크가 없을 때를 대비해 문자열로 참조
     dependsOn 'openapi3'
-    from "src/main/resources/static/docs/openapi3.yaml"
-    into "src/main/resources/static/"
+    from "build/api-spec/openapi3.yaml"
+    into "src/main/resources/static/docs"
+}
 
-    doFirst {
-        def sourceFile = file("src/main/resources/static/docs/openapi3.yaml")
-        if (!sourceFile.exists()) {
-            logger.warn("openapi3.yaml not found at ${sourceFile.absolutePath}")
-        }
+// [핵심 수정] 플러그인이 태스크를 늦게 만들기 때문에 afterEvaluate로 감싸야 함
+afterEvaluate {
+    tasks.named('openapi3') {
+        dependsOn 'test'
     }
 }
 
+// 5. 빌드 및 패키징
 build {
     dependsOn copyDocument
-    finalizedBy copyOasToSwagger
+    dependsOn copyOasToSwagger
 }
 
 bootJar {
     dependsOn copyDocument
-    dependsOn 'openapi3'
+    dependsOn copyOasToSwagger
 
     from("${asciidoctor.outputDir}") {
         into 'static/docs'
