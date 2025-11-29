@@ -84,7 +84,7 @@ tasks.named('test') {
 }
 
 openapi3 {
-    server = 'https://www.stiky.site'
+    server = 'https://api.stiky.site'
     title = 'Stiky API'
     description = 'API 설명'
     version = '1.0.0'
