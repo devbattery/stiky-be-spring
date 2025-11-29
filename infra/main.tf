@@ -183,6 +183,13 @@ resource "google_cloud_run_v2_service" "default" {
   }
 }
 
+resource "google_cloud_run_v2_service_iam_member" "noauth" {
+  location = google_cloud_run_v2_service.default.location
+  name     = google_cloud_run_v2_service.default.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
 
 # 1. 고정 IP 예약 (로드밸런서용)
 resource "google_compute_global_address" "lb_ip" {
