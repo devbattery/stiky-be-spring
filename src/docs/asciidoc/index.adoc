@@ -53,6 +53,9 @@
 | `400 Bad Request`
 | 잘못된 요청을 보낸 경우
 
+| `401 Unauthorized`
+| 인증이 필요한 리소스에 인증 없이 접근한 경우
+
 | `404 Not Found`
 | 요청한 리소스가 없음
 
@@ -60,15 +63,26 @@
 | 서버 내부 오류
 |===
 
-[[resources]]
-= 리소스
+[[resources-auth]]
+= 인증 (Auth)
 
-[[resources-user]]
-== 사용자
+[[resources-auth-signup]]
+== 일반 회원가입
 
-[[resources-user-create]]
-=== 사용자 생성
+`POST` 요청을 사용해서 새로운 사용자를 생성합니다.
 
-`POST` 요청을 사용해서 새로운 사용자를 생성할 수 있습니다.
+operation::auth-signup[snippets='http-request,request-fields,http-response,response-fields']
 
-operation::user-create[snippets='http-request,request-fields,http-response,response-fields']
+[[resources-auth-login]]
+== 일반 로그인
+
+이메일과 비밀번호를 사용하여 로그인하고, 액세스 토큰 및 리프레시 토큰을 발급받습니다.
+
+operation::auth-login[snippets='http-request,request-fields,http-response,response-fields']
+
+[[resources-auth-exchange-token]]
+== OAuth2 토큰 교환
+
+OAuth2 로그인(Google 등) 성공 후 리다이렉트된 임시 코드를 사용하여 액세스 토큰을 교환합니다.
+
+operation::auth-exchange-token[snippets='http-request,request-fields,http-response,response-fields']
