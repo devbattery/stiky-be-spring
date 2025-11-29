@@ -71,7 +71,8 @@ public abstract class AcceptanceTestBase {
         registry.add("jwt.secret", () -> "VGhpcyBpcyBhIGRhbW4gbG9uZyBzZWNyZXQga2V5IGZvciB0ZXN0aW5nIG9ubHk=");
         registry.add("spring.security.oauth2.client.registration.google.client-id", () -> "test-client-id");
         registry.add("spring.security.oauth2.client.registration.google.client-secret", () -> "test-client-secret");
-        registry.add("openapi.server-url", () -> "https://www.stiky.site");
+//        registry.add("openapi.server-url", () -> "http://localhost:8080");
+        registry.add("openapi.server-url", () -> "https://api.stiky.site");
     }
 
     @BeforeEach

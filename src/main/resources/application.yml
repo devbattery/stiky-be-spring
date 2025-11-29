@@ -3,6 +3,7 @@ spring:
     name: stiky-api
   profiles:
     active: prod
+#    active: local
 
   jpa:
     open-in-view: false
