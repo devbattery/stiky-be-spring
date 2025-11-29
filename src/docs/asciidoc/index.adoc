@@ -71,18 +71,18 @@
 
 `POST` 요청을 사용해서 새로운 사용자를 생성합니다.
 
-operation::auth-signup[snippets='http-request,request-fields,http-response,response-fields']
+operation::auth-signup[snippets='http-request,http-response']
 
 [[resources-auth-login]]
 == 일반 로그인
 
 이메일과 비밀번호를 사용하여 로그인하고, 액세스 토큰 및 리프레시 토큰을 발급받습니다.
 
-operation::auth-login[snippets='http-request,request-fields,http-response,response-fields']
+operation::auth-login[snippets='http-request,http-response']
 
 [[resources-auth-exchange-token]]
 == OAuth2 토큰 교환
 
 OAuth2 로그인(Google 등) 성공 후 리다이렉트된 임시 코드를 사용하여 액세스 토큰을 교환합니다.
 
-operation::auth-exchange-token[snippets='http-request,request-fields,http-response,response-fields']
+operation::auth-exchange-token[snippets='http-request,http-response']
