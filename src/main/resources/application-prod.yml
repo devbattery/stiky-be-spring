@@ -35,3 +35,9 @@ openapi:
 
 jwt:
   secret: ${JWT_SECRET}
+
+cors:
+  allowed-origins:
+    - "https://www.stiky.site"
+    - "https://stiky.site"
+    - "http://localhost:5173"
