@@ -140,6 +140,6 @@ bootJar {
     }
     from("src/main/resources/static/docs") {
         include 'openapi3.yaml'
-        into 'static'
+        into 'static/docs'
     }
 }
