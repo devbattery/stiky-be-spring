@@ -7,6 +7,7 @@ import static wonjun.stiky.global.exception.ErrorCode.LOGIN_FAILED;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -31,6 +32,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, Object> redisTemplate;
+
+    @Value("${cookie.domain}")
+    private String cookieUrl;
 
     public SignupResponse signup(SignupRequest request) {
         if (memberQueryService.fetchByEmailOpt(request.getEmail()).isPresent()) {
@@ -86,14 +90,14 @@ public class AuthService {
     }
 
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
-                .sameSite("None")
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+                .sameSite("None");
+        cookieBuilder.domain(cookieUrl);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
     }
 
 }

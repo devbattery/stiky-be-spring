@@ -39,3 +39,6 @@ jwt:
 
 cors:
   allowed-origins: https://www.stiky.site,https://stiky.site,http://localhost:5173
+
+cookie:
+  domain: .stiky.site

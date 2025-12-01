@@ -73,11 +73,10 @@ public abstract class AcceptanceTestBase {
         registry.add("spring.security.oauth2.client.registration.google.client-secret", () -> "test-client-secret");
 
         registry.add("openapi.server-url", () -> "http://localhost:8080");
-//        registry.add("openapi.server-url", () -> "https://api.stiky.site");
         registry.add("openapi.client-url", () -> "http://localhost:5173");
-//        registry.add("openapi.client-url", () -> "https://www.stiky.site");
-
         registry.add("cors.allowed-origins", () -> "http://localhost:5173");
+
+        registry.add("cookie.domain", () -> "localhost");
     }
 
     @BeforeEach
