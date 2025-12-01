@@ -1,6 +1,9 @@
 package wonjun.stiky.acceptance;
 
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
+import static org.springframework.restdocs.cookies.CookieDocumentation.cookieWithName;
+import static org.springframework.restdocs.cookies.CookieDocumentation.requestCookies;
+import static org.springframework.restdocs.cookies.CookieDocumentation.responseCookies;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -20,6 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import wonjun.stiky.auth.config.JwtTokenProvider;
+import wonjun.stiky.auth.controller.dto.TokenDto;
 import wonjun.stiky.member.domain.Member;
 import wonjun.stiky.member.repository.MemberRepository;
 
@@ -229,6 +233,68 @@ class AuthAcceptanceTest extends AcceptanceTestBase {
                                         fieldWithPath("accessToken").description("액세스 토큰")
                                 )
                                 .build())
+                ));
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 API")
+    void reissue() throws Exception {
+        // Given
+        String email = "reissue@example.com";
+        String role = "ROLE_USER";
+
+        TokenDto tokenDto = jwtTokenProvider.generateToken(email, role);
+        String validRefreshToken = tokenDto.getRefreshToken();
+
+        redisTemplate.opsForValue().set("RT:" + email, validRefreshToken, 7, TimeUnit.DAYS);
+
+        memberRepository.save(Member.builder()
+                .email(email)
+                .password("password")
+                .nickname("재발급유저")
+                .role(role)
+                .provider("local")
+                .build());
+
+        // When & Then
+        mockMvc.perform(post("/api/auth/reissue")
+                        .cookie(new jakarta.servlet.http.Cookie("refresh_token", validRefreshToken))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andDo(document("auth-reissue",
+                        resource(ResourceSnippetParameters.builder()
+                                .tag("Auth")
+                                .summary("토큰 재발급")
+                                .description("쿠키에 담긴 Refresh Token을 이용하여 Access Token을 재발급받습니다.")
+                                .responseSchema(Schema.schema("ReissueResponse"))
+                                .responseFields(
+                                        fieldWithPath("accessToken").description("새로 발급된 액세스 토큰")
+                                )
+                                .build()),
+                        requestCookies(
+                                cookieWithName("refresh_token").description("리프레시 토큰 (HttpOnly)")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("로그아웃 API")
+    void logout() throws Exception {
+        // When & Then
+        mockMvc.perform(post("/api/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(cookie().maxAge("refresh_token", 0)) // 쿠키 삭제 확인
+                .andDo(document("auth-logout",
+                        resource(ResourceSnippetParameters.builder()
+                                .tag("Auth")
+                                .summary("로그아웃")
+                                .description("사용자의 리프레시 토큰 쿠키를 삭제합니다.")
+                                .build()),
+                        responseCookies(
+                                cookieWithName("refresh_token").description("삭제된 리프레시 토큰 (Max-Age: 0)")
+                        )
                 ));
     }
 
