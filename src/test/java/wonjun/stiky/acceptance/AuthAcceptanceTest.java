@@ -3,6 +3,7 @@ package wonjun.stiky.acceptance;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,12 +38,13 @@ class AuthAcceptanceTest extends AcceptanceTestBase {
     @DisplayName("OAuth2 인증 코드로 액세스 토큰 교환 API")
     void exchangeToken() throws Exception {
         // Given
-        // 1. 가상의 인증 코드 생성
         String code = UUID.randomUUID().toString();
         String expectedAccessToken = "mock-access-token-12345";
+        String expectedRefreshToken = "mock-refresh-token-67890"; // 리프레시 토큰 추가
 
-        // 2. Redis에 인증 코드와 토큰 매핑 저장 (OAuth2SuccessHandler가 수행하는 작업을 시뮬레이션)
+        // 2. Redis에 인증 코드와 토큰 매핑 저장
         redisTemplate.opsForValue().set("LOGIN_CODE:" + code, expectedAccessToken, 60, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set("LOGIN_CODE:" + code + ":RT", expectedRefreshToken, 60, TimeUnit.SECONDS);
 
         Map<String, String> requestMap = new HashMap<>();
         requestMap.put("code", code);
@@ -54,11 +56,13 @@ class AuthAcceptanceTest extends AcceptanceTestBase {
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value(expectedAccessToken))
+                .andExpect(cookie().exists("refresh_token")) // 쿠키 존재 여부 확인
+                .andExpect(cookie().value("refresh_token", expectedRefreshToken)) // 쿠키 값 확인
                 .andDo(document("auth-exchange-token",
                         resource(ResourceSnippetParameters.builder()
                                 .tag("Auth")
                                 .summary("토큰 교환")
-                                .description("OAuth2 로그인 후 발급받은 임시 코드로 액세스 토큰을 교환합니다.")
+                                .description("OAuth2 로그인 후 발급받은 임시 코드로 액세스 토큰을 교환하고, 리프레시 토큰을 쿠키로 설정합니다.")
                                 .requestSchema(Schema.schema("TokenExchangeRequest"))
                                 .responseSchema(Schema.schema("TokenExchangeResponse"))
                                 .requestFields(
@@ -206,12 +210,14 @@ class AuthAcceptanceTest extends AcceptanceTestBase {
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").exists())
-                .andExpect(jsonPath("$.refreshToken").exists())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist()) // Body에 없어야 함
+                .andExpect(cookie().exists("refresh_token")) // Cookie에 있어야 함
+                .andExpect(cookie().httpOnly("refresh_token", true)) // HttpOnly 속성 확인
                 .andDo(document("auth-login",
                         resource(ResourceSnippetParameters.builder()
                                 .tag("Auth")
                                 .summary("일반 로그인")
-                                .description("이메일과 비밀번호로 로그인하여 토큰을 발급받습니다.")
+                                .description("이메일과 비밀번호로 로그인하여 토큰을 발급받습니다. (Refresh Token은 HttpOnly 쿠키로 전달)")
                                 .requestSchema(Schema.schema("LoginRequest"))
                                 .responseSchema(Schema.schema("LoginResponse"))
                                 .requestFields(
@@ -219,9 +225,8 @@ class AuthAcceptanceTest extends AcceptanceTestBase {
                                         fieldWithPath("password").description("비밀번호")
                                 )
                                 .responseFields(
-                                        fieldWithPath("grantType").description("인증 타입 (Bearer)"),
-                                        fieldWithPath("accessToken").description("액세스 토큰"),
-                                        fieldWithPath("refreshToken").description("리프레시 토큰")
+                                        // grantType과 refreshToken은 이제 Body에 없으므로 문서에서 제거
+                                        fieldWithPath("accessToken").description("액세스 토큰")
                                 )
                                 .build())
                 ));
