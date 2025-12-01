@@ -74,6 +74,8 @@ public abstract class AcceptanceTestBase {
 
 //        registry.add("openapi.server-url", () -> "http://localhost:8080");
         registry.add("openapi.server-url", () -> "https://api.stiky.site");
+//        registry.add("openapi.client-url", () -> "http://localhost:5173");
+        registry.add("openapi.client-url", () -> "https://www.stiky.site");
 
         registry.add("cors.allowed-origins", () -> "http://localhost:5173");
     }
