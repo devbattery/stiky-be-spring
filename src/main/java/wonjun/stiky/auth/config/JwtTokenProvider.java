@@ -27,7 +27,7 @@ public class JwtTokenProvider {
     public TokenDto generateToken(String email, String role) {
         long now = (new Date()).getTime();
         String accessToken = generateAccessToken(email, role, now);
-        String refreshToken = generateRefreshToken(now);
+        String refreshToken = generateRefreshToken(email, now);
         return TokenDto.from(accessToken, refreshToken);
     }
 
@@ -41,8 +41,9 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    private String generateRefreshToken(long now) {
+    private String generateRefreshToken(String email, long now) {
         return Jwts.builder()
+                .setSubject(email)
                 .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
