@@ -34,7 +34,7 @@ public class AuthController {
     @PostMapping("/api/auth/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
         TokenDto tokenDto = authService.login(request);
-        setRefreshTokenCookie(response, tokenDto.getRefreshToken());
+        authService.setRefreshTokenCookie(response, tokenDto.getRefreshToken());
         return ResponseEntity.ok(Map.of("accessToken", tokenDto.getAccessToken()));
     }
 
@@ -63,7 +63,7 @@ public class AuthController {
         redisTemplate.delete(redisKey);
         redisTemplate.delete(redisKey + ":RT");
 
-        setRefreshTokenCookie(response, refreshToken);
+        authService.setRefreshTokenCookie(response, refreshToken);
 
         return ResponseEntity.ok(Map.of("accessToken", accessToken));
     }
@@ -76,17 +76,6 @@ public class AuthController {
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok("로그아웃 되었습니다.");
-    }
-
-    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(7 * 24 * 60 * 60)
-                .sameSite("None")
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
 }

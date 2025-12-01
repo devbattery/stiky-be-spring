@@ -4,9 +4,12 @@ import static wonjun.stiky.global.exception.ErrorCode.EMAIL_ALREADY_EXISTS;
 import static wonjun.stiky.global.exception.ErrorCode.INVALID_TOKEN;
 import static wonjun.stiky.global.exception.ErrorCode.LOGIN_FAILED;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,6 +83,17 @@ public class AuthService {
                 .set("RT:" + email, newToken.getRefreshToken(), 7, TimeUnit.DAYS);
 
         return newToken;
+    }
+
+    public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("None")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
 }
