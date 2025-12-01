@@ -1,16 +1,21 @@
 package wonjun.stiky.auth.service;
 
+import static wonjun.stiky.global.exception.ErrorCode.EMAIL_ALREADY_EXISTS;
+import static wonjun.stiky.global.exception.ErrorCode.INVALID_TOKEN;
+import static wonjun.stiky.global.exception.ErrorCode.LOGIN_FAILED;
+
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wonjun.stiky.auth.config.JwtTokenProvider;
+import wonjun.stiky.auth.controller.dto.TokenDto;
 import wonjun.stiky.auth.controller.dto.request.LoginRequest;
 import wonjun.stiky.auth.controller.dto.request.SignupRequest;
 import wonjun.stiky.auth.controller.dto.response.SignupResponse;
-import wonjun.stiky.auth.config.JwtTokenProvider;
-import wonjun.stiky.auth.controller.dto.TokenDto;
+import wonjun.stiky.global.exception.CustomException;
 import wonjun.stiky.member.domain.Member;
 import wonjun.stiky.member.service.MemberQueryService;
 
@@ -26,7 +31,7 @@ public class AuthService {
 
     public SignupResponse signup(SignupRequest request) {
         if (memberQueryService.fetchByEmailOpt(request.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 가입된 계정"); // TODO: 커스텀 예외처리
+            throw new CustomException(EMAIL_ALREADY_EXISTS);
         }
 
         Member member = Member.builder()
@@ -45,7 +50,7 @@ public class AuthService {
         Member member = memberQueryService.fetchByEmail(request.getEmail());
 
         if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-            throw new IllegalArgumentException("잘못된 비밀번호."); // TODO: 커스텀 예외처리
+            throw new CustomException(LOGIN_FAILED);
         }
 
         TokenDto tokenDto = jwtTokenProvider.generateToken(member.getEmail(), member.getRole());
@@ -54,6 +59,27 @@ public class AuthService {
                 .set("RT:" + member.getEmail(), tokenDto.getRefreshToken(), 7, TimeUnit.DAYS);
 
         return tokenDto;
+    }
+
+    public TokenDto reissue(String refreshToken) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new CustomException(INVALID_TOKEN);
+        }
+
+        String email = jwtTokenProvider.getEmail(refreshToken);
+        String storedRefreshToken = (String) redisTemplate.opsForValue().get("RT:" + email);
+
+        if (!refreshToken.equals(storedRefreshToken)) {
+            throw new CustomException(INVALID_TOKEN);
+        }
+
+        Member member = memberQueryService.fetchByEmail(email);
+        TokenDto newToken = jwtTokenProvider.generateToken(member.getEmail(), member.getRole());
+
+        redisTemplate.opsForValue()
+                .set("RT:" + email, newToken.getRefreshToken(), 7, TimeUnit.DAYS);
+
+        return newToken;
     }
 
 }
