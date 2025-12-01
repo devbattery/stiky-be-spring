@@ -31,7 +31,8 @@ spring:
               - profile
 
 openapi:
-  server-url: https://www.stiky.site
+  server-url: https://api.stiky.site
+  client-url: https://www.stiky.site
 
 jwt:
   secret: ${JWT_SECRET}

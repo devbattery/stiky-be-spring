@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -23,6 +24,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    @Value("${openapi.client-url}")
+    private String url;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
@@ -34,9 +38,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         redisTemplate.opsForValue().set("RT:" + email, tokenDto.getRefreshToken(), 7, TimeUnit.DAYS);
 
         String code = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set("LOGIN_CODE:" + code, tokenDto.getAccessToken(), 60, TimeUnit.DAYS.SECONDS);
+        redisTemplate.opsForValue().set("LOGIN_CODE:" + code, tokenDto.getAccessToken(), 60, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set("LOGIN_CODE:" + code + ":RT", tokenDto.getRefreshToken(), 60, TimeUnit.SECONDS);
 
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/login/callback") // TODO: 변경하기
+        String targetUrl = UriComponentsBuilder.fromUriString(url + "/login/callback")
                 .queryParam("code", code)
                 .build().toUriString();
 
