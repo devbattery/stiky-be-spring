@@ -29,6 +29,7 @@ spring:
             scope:
               - email
               - profile
+            redirect-uri: "https://api.stiky.site/login/oauth2/code/google"
 
 openapi:
   server-url: https://api.stiky.site
