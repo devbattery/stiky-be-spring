@@ -96,10 +96,11 @@ resource "google_compute_instance" "redis_vm" {
   }
 
   metadata_startup_script = <<EOF
-    docker run -d --name redis \
-      -p 6379:6379 \
-      --restart always \
-      redis:alpine redis-server --protected-mode no
+      docker rm -f redis || true
+      docker run -d --name redis \
+        -p 6379:6379 \
+        --restart always \
+        redis:alpine redis-server --protected-mode no
   EOF
 
   tags = ["redis-vm"]
