@@ -46,6 +46,8 @@ public class AuthController {
         }
 
         TokenDto tokenDto = authService.reissue(refreshToken);
+        authService.setRefreshTokenCookie(response, tokenDto.getRefreshToken());
+
         return ResponseEntity.ok(Map.of("accessToken", tokenDto.getAccessToken()));
     }
 
