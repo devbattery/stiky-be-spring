@@ -1,12 +1,13 @@
 package wonjun.stiky.auth.config;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import wonjun.stiky.global.exception.CustomException;
+import org.springframework.transaction.annotation.Transactional;
 import wonjun.stiky.member.domain.Member;
 import wonjun.stiky.member.service.MemberQueryService;
 
@@ -16,6 +17,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final MemberQueryService memberQueryService;
 
+    @Transactional
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
@@ -25,25 +27,33 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuthAttributes attributes = OAuthAttributes.of(registrationId, userNameAttributeName,
                 oAuth2User.getAttributes());
 
-        update(attributes);
+        process(attributes);
         return oAuth2User;
     }
 
-    private void update(OAuthAttributes attributes) {
-        try {
-            Member foundMember = memberQueryService.fetchByEmail(attributes.getEmail());
-            foundMember.updateSocialInfo(attributes.getProvider(), attributes.getNameAttributeKey());
-            memberQueryService.save(foundMember);
-        } catch (CustomException e) {
-            Member member = Member.builder()
-                    .email(attributes.getEmail())
-                    .nickname(attributes.getName()) // TODO: 사용자가 온보딩 때 바꿀 수 있도록
-                    .role("ROLE_USER")
-                    .provider(attributes.getProvider())
-                    .providerId(attributes.getNameAttributeKey())
-                    .build();
-            memberQueryService.save(member);
-        }
+    private void process(OAuthAttributes attributes) {
+        memberQueryService.fetchByEmailOpt(attributes.getEmail())
+                .ifPresentOrElse(
+                        member -> {
+                            member.updateSocialInfo(attributes.getProvider(), attributes.getNameAttributeKey());
+                            memberQueryService.save(member);
+                        },
+                        () -> {
+                            Member member = makeMember(attributes);
+                            memberQueryService.save(member);
+                        }
+                );
+    }
+
+    private Member makeMember(OAuthAttributes attributes) {
+        return Member.builder()
+                .email(attributes.getEmail())
+                .nickname(attributes.getName())
+                .password(UUID.randomUUID().toString()) // 더미 패스워드
+                .role("ROLE_USER")
+                .provider(attributes.getProvider())
+                .providerId(attributes.getNameAttributeKey())
+                .build();
     }
 
 }
