@@ -77,7 +77,7 @@ resource "google_sql_user" "users" {
   password = data.google_secret_manager_secret_version.db_pass.secret_data
 }
 
-# 3. Redis (VM으로 대체하여 비용 절감)
+# 3. Redis (VM)
 resource "google_compute_instance" "redis_vm" {
   name         = "stiky-redis-vm"
   machine_type = "e2-micro"
@@ -99,7 +99,7 @@ resource "google_compute_instance" "redis_vm" {
     docker run -d --name redis \
       -p 6379:6379 \
       --restart always \
-      redis:alpine
+      redis:alpine redis-server --protected-mode no
   EOF
 
   tags = ["redis-vm"]
@@ -115,7 +115,7 @@ resource "google_compute_firewall" "allow_redis" {
     ports    = ["6379"]
   }
 
-  source_ranges = ["10.0.0.0/8"]
+  source_ranges = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
   target_tags   = ["redis-vm"]
 }
 
