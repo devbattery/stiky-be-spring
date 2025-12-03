@@ -43,7 +43,10 @@ public class Member {
     }
 
     public void updateSocialInfo(String provider, String providerId) {
-        this.provider = provider;
+        if (this.provider == null || !this.provider.equals("local")) {
+            this.provider = provider;
+        }
+
         this.providerId = providerId;
     }
 
