@@ -92,11 +92,18 @@ public class AuthService {
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
-                .secure(true)
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60)
-                .sameSite("None");
-        cookieBuilder.domain(cookieUrl);
+                .maxAge(7 * 24 * 60 * 60);
+
+        if (cookieUrl.isBlank()) {
+            cookieBuilder.secure(false)
+                    .sameSite("Lax");
+        } else {
+            cookieBuilder.secure(true)
+                    .sameSite("None")
+                    .domain(cookieUrl);
+        }
+
         response.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
     }
 
