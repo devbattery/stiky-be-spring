@@ -100,8 +100,7 @@ public class AuthService {
                     .sameSite("Lax");
         } else {
             cookieBuilder.secure(true)
-                    .sameSite("None")
-                    .domain(cookieUrl);
+                    .sameSite("None");
         }
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
