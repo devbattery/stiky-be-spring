@@ -163,8 +163,8 @@ resource "google_cloud_run_v2_service" "default" {
 
       resources {
         limits = {
-          cpu    = "1000m"  # [중요] 1 vCPU로 하향 (비용 절감)
-          memory = "512Mi"  # [중요] 512MB로 하향 (비용 절감)
+          cpu    = "1000m"
+          memory = "1Gi"
         }
         cpu_idle = true # [중요] 요청 처리 중에만 CPU 할당 (비용 절감)
       }
