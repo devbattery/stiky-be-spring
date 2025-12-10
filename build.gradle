@@ -85,7 +85,7 @@ tasks.named('test') {
 
 // 2. OpenAPI 스펙 생성 설정 (Extension 설정)
 openapi3 {
-    server = 'https://api.stiky.site'
+    server = 'https://stiky-api-mh6lf6mzkq-du.a.run.app'
 //    server = 'http://localhost:8080'
     title = 'Stiky API'
     description = 'Stiky API 명세서'
