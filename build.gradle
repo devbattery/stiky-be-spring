@@ -4,6 +4,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
     id 'com.epages.restdocs-api-spec' version '0.19.2'
+    id 'nu.studer.jooq' version '9.0'
 }
 
 group = 'wonjun'
@@ -32,7 +33,10 @@ ext {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // jOOQ 관련 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    jooqGenerator 'com.mysql:mysql-connector-j'
+
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
@@ -69,6 +73,56 @@ dependencies {
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Flyway for DB migration
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+}
+
+// jOOQ 코드 생성 설정 - Local 환경용
+jooq {
+    version = dependencyManagement.importedProperties['jooq.version']
+
+    configurations {
+        main {
+            generationTool {
+                logging = 'INFO'
+
+                jdbc {
+                    driver = 'com.mysql.cj.jdbc.Driver'
+                    url = 'jdbc:mysql://localhost:3306/stidb'
+                    user = 'root'
+                    password = 'qwe123'
+                }
+
+                generator {
+                    name = 'org.jooq.codegen.JavaGenerator'
+
+                    database {
+                        name = 'org.jooq.meta.mysql.MySQLDatabase'
+                        inputSchema = 'stidb'
+
+                        // 생성할 테이블 패턴 (필요시 조정)
+                        includes = '.*'
+                        excludes = 'flyway_schema_history'
+                    }
+
+                    generate {
+                        deprecated = false
+                        records = true
+                        pojos = true
+                        daos = true
+                        fluentSetters = true
+                    }
+
+                    target {
+                        packageName = 'wonjun.jooq.generated'
+                        directory = 'src/main/java'
+                    }
+                }
+            }
+        }
+    }
 }
 
 // 1. 테스트 설정
@@ -83,15 +137,13 @@ tasks.named('test') {
     }
 }
 
-// 2. OpenAPI 스펙 생성 설정 (Extension 설정)
+// 2. OpenAPI 스펙 생성 설정
 openapi3 {
     server = 'https://stiky-api-mh6lf6mzkq-du.a.run.app'
-//    server = 'http://localhost:8080'
     title = 'Stiky API'
     description = 'Stiky API 명세서'
     version = '1.0.0'
     format = 'yaml'
-    // 생성 위치를 build 폴더로 변경
     outputDirectory = 'build/api-spec'
 }
 
@@ -112,13 +164,11 @@ task copyDocument(type: Copy) {
 }
 
 task copyOasToSwagger(type: Copy) {
-    // openapi3 태스크가 없을 때를 대비해 문자열로 참조
     dependsOn 'openapi3'
     from "build/api-spec/openapi3.yaml"
     into "src/main/resources/static/docs"
 }
 
-// [핵심 수정] 플러그인이 태스크를 늦게 만들기 때문에 afterEvaluate로 감싸야 함
 afterEvaluate {
     tasks.named('openapi3') {
         dependsOn 'test'
@@ -143,3 +193,6 @@ bootJar {
         into 'static/docs'
     }
 }
+
+// jOOQ 생성은 수동으로 실행
+// ./gradlew generateJooq
