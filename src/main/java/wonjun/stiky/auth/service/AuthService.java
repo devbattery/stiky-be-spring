@@ -95,7 +95,7 @@ public class AuthService {
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60);
 
-        if (cookieUrl.isBlank()) {
+        if (cookieUrl == null || cookieUrl.isBlank()) {
             cookieBuilder.secure(false)
                     .sameSite("Lax");
         } else {

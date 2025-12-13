@@ -23,6 +23,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
     @Value("${openapi.client-url}")
     private String url;
@@ -36,6 +37,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String email = getEmailFromAttributes(attributes);
         TokenDto tokenDto = jwtTokenProvider.generateToken(email, "ROLE_USER");
         redisTemplate.opsForValue().set("RT:" + email, tokenDto.getRefreshToken(), 7, TimeUnit.DAYS);
+
+        authorizationRequestRepository.removeAuthorizationRequest(request, response);
 
         String code = UUID.randomUUID().toString();
         redisTemplate.opsForValue().set("LOGIN_CODE:" + code, tokenDto.getAccessToken(), 60, TimeUnit.SECONDS);
