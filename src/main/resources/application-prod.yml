@@ -9,15 +9,13 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASS}
 
+  jooq:
+    sql-dialect: MYSQL
+
   data:
     redis:
       host: ${REDIS_HOST}
       port: 6379
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
 
   security:
     oauth2:

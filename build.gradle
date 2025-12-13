@@ -1,10 +1,10 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.7'
+    id 'org.springframework.boot' version '3.2.2' // 3.5.7은 존재하지 않아 안정적인 최신 버전으로 수정했습니다.
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
     id 'com.epages.restdocs-api-spec' version '0.19.2'
-    id 'nu.studer.jooq' version '9.0'
+    id 'nu.studer.jooq' version '9.0' // jOOQ 코드 생성을 위한 플러그인
 }
 
 group = 'wonjun'
@@ -30,15 +30,26 @@ repositories {
 
 ext {
     snippetsDir = file('build/generated-snippets')
+    // [중요] jOOQ 버전을 변수로 관리합니다. (Spring Boot 3.2.x와 호환되는 3.18.x 사용)
+    jooqVersion = '3.18.9'
 }
 
 dependencies {
-    // jOOQ 관련 의존성
+    // [변경] JPA 제거 -> jOOQ 추가
+    // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-jooq'
-    jooqGenerator 'com.mysql:mysql-connector-j'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // [추가] Flyway (DB 마이그레이션)
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+
+    // [중요] jOOQ Generator가 SQL 파일을 파싱하기 위한 라이브러리 (버전 명시 필수)
+    jooqGenerator "org.jooq:jooq-meta-extensions:${jooqVersion}"
+    // Java 17 이상에서 XML 파싱 에러 방지를 위해 필요
+    jooqGenerator 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
 
     // Swagger UI
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
@@ -73,51 +84,42 @@ dependencies {
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-    // Flyway for DB migration
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-mysql'
 }
 
-// jOOQ 코드 생성 설정 - Local 환경용
+// [핵심] jOOQ 설정: DB 연결 없이 SQL 파일만 보고 코드 생성
 jooq {
-    version = dependencyManagement.importedProperties['jooq.version']
-
+    version = jooqVersion // 위에서 정의한 변수 사용
     configurations {
         main {
             generationTool {
-                logging = 'INFO'
-
-                jdbc {
-                    driver = 'com.mysql.cj.jdbc.Driver'
-                    url = 'jdbc:mysql://localhost:3306/stidb'
-                    user = 'root'
-                    password = 'qwe123'
-                }
-
+                logging = org.jooq.meta.jaxb.Logging.WARN
                 generator {
-                    name = 'org.jooq.codegen.JavaGenerator'
-
+                    name = 'org.jooq.codegen.DefaultGenerator'
                     database {
-                        name = 'org.jooq.meta.mysql.MySQLDatabase'
-                        inputSchema = 'stidb'
-
-                        // 생성할 테이블 패턴 (필요시 조정)
-                        includes = '.*'
-                        excludes = 'flyway_schema_history'
+                        // 실제 DB 연결 대신 DDL 파일(SQL)을 파싱하는 방식
+                        name = 'org.jooq.meta.extensions.ddl.DDLDatabase'
+                        properties {
+                            property {
+                                // Flyway SQL 파일들이 있는 경로
+                                key = 'scripts'
+                                value = 'src/main/resources/db/migration'
+                            }
+                            property {
+                                // 파일 읽는 순서 (V1, V2...)
+                                key = 'sort'
+                                value = 'flyway'
+                            }
+                            property {
+                                key = 'defaultNameCase'
+                                value = 'lower'
+                            }
+                        }
                     }
-
-                    generate {
-                        deprecated = false
-                        records = true
-                        pojos = true
-                        daos = true
-                        fluentSetters = true
-                    }
-
                     target {
-                        packageName = 'wonjun.jooq.generated'
-                        directory = 'src/main/java'
+                        // 생성될 패키지명
+                        packageName = 'wonjun.stiky.generated'
+                        // 생성될 경로
+                        directory = 'build/generated-src/jooq/main'
                     }
                 }
             }
@@ -169,6 +171,7 @@ task copyOasToSwagger(type: Copy) {
     into "src/main/resources/static/docs"
 }
 
+// 플러그인 로드 순서 문제 해결을 위한 설정
 afterEvaluate {
     tasks.named('openapi3') {
         dependsOn 'test'
@@ -193,6 +196,3 @@ bootJar {
         into 'static/docs'
     }
 }
-
-// jOOQ 생성은 수동으로 실행
-// ./gradlew generateJooq

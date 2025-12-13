@@ -2,15 +2,12 @@ spring:
   application:
     name: stiky-api
   profiles:
-    active: prod
-#    active: local
+    active: prod # 기본값
 
-  jpa:
-    open-in-view: false
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+  # Flyway 설정 (DB 스키마 자동 관리)
+  flyway:
+    enabled: true
+    baseline-on-migrate: true # 기존 DB가 있어도 마이그레이션 실행
 
 springdoc:
   swagger-ui:
