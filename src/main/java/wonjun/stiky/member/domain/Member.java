@@ -3,8 +3,10 @@ package wonjun.stiky.member.domain;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter // jOOQ 매핑 편의성을 위해 추가 (Record -> POJO)
 @NoArgsConstructor
 public class Member {
 
@@ -17,8 +19,7 @@ public class Member {
     private String providerId;
 
     @Builder
-    public Member(Long id, String email, String password, String nickname, String role, String provider,
-                  String providerId) {
+    public Member(Long id, String email, String password, String nickname, String role, String provider, String providerId) {
         this.id = id;
         this.email = email;
         this.password = password;
@@ -34,5 +35,4 @@ public class Member {
         }
         this.providerId = providerId;
     }
-
 }
