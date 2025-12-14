@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Base64;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
@@ -20,9 +21,14 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements
     public static final String REDIRECT_URI_PARAM_COOKIE_NAME = "redirect_uri";
     private static final int COOKIE_EXPIRE_SECONDS = 180;
 
+    @Value("${cookie.domain:}")
+    private String cookieDomain;
+
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-        return readCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME).map(this::deserialize).orElse(null);
+        return readCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME)
+                .map(this::deserialize)
+                .orElse(null);
     }
 
     @Override
@@ -33,12 +39,13 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements
             return;
         }
 
-        addCookie(request, response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, serialize(authorizationRequest),
-                COOKIE_EXPIRE_SECONDS);
+        addCookie(request, response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME,
+                serialize(authorizationRequest), COOKIE_EXPIRE_SECONDS);
 
         String redirectUriAfterLogin = request.getParameter(REDIRECT_URI_PARAM_COOKIE_NAME);
         if (redirectUriAfterLogin != null && !redirectUriAfterLogin.isBlank()) {
-            addCookie(request, response, REDIRECT_URI_PARAM_COOKIE_NAME, redirectUriAfterLogin, COOKIE_EXPIRE_SECONDS);
+            addCookie(request, response, REDIRECT_URI_PARAM_COOKIE_NAME,
+                    redirectUriAfterLogin, COOKIE_EXPIRE_SECONDS);
         }
     }
 
@@ -75,12 +82,12 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements
             return;
         }
 
-        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, value).path("/").httpOnly(true)
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, value)
+                .path("/")
+                .httpOnly(true)
                 .maxAge(maxAge);
 
-        if (request != null && request.isSecure()) {
-            builder.secure(true).sameSite("None");
-        }
+        applyCookieSecurity(builder, request);
 
         response.addHeader(HttpHeaders.SET_COOKIE, builder.build().toString());
     }
@@ -90,11 +97,12 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements
             return;
         }
 
-        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, "").path("/").httpOnly(true).maxAge(0);
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, "")
+                .path("/")
+                .httpOnly(true)
+                .maxAge(0);
 
-        if (request != null && request.isSecure()) {
-            builder.secure(true).sameSite("None");
-        }
+        applyCookieSecurity(builder, request);
 
         response.addHeader(HttpHeaders.SET_COOKIE, builder.build().toString());
     }
@@ -109,4 +117,44 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements
         return (OAuth2AuthorizationRequest) SerializationUtils.deserialize(bytes);
     }
 
+    private void applyCookieSecurity(ResponseCookie.ResponseCookieBuilder builder, HttpServletRequest request) {
+        if (supportsCookieDomain(request)) {
+            builder.domain(cookieDomain)
+                    .secure(true)
+                    .sameSite("None");
+            return;
+        }
+
+        if (isHttpsRequest(request)) {
+            builder.secure(true)
+                    .sameSite("None");
+        } else {
+            builder.secure(false)
+                    .sameSite("Lax");
+        }
+    }
+
+    private boolean isHttpsRequest(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+
+        if (request.isSecure()) {
+            return true;
+        }
+
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        return forwardedProto != null && forwardedProto.equalsIgnoreCase("https");
+    }
+
+    private boolean supportsCookieDomain(HttpServletRequest request) {
+        if (cookieDomain == null || cookieDomain.isBlank() || request == null) {
+            return false;
+        }
+
+        String normalizedDomain = cookieDomain.startsWith(".") ? cookieDomain.substring(1) : cookieDomain;
+        String serverName = request.getServerName();
+
+        return serverName.equals(normalizedDomain) || serverName.endsWith("." + normalizedDomain);
+    }
 }
