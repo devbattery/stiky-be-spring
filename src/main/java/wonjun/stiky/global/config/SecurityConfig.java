@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import wonjun.stiky.auth.config.CustomOAuth2UserService;
 import wonjun.stiky.auth.config.CustomUserDetailsService;
-import wonjun.stiky.auth.config.HttpCookieOAuth2AuthorizationRequestRepository;
+import wonjun.stiky.auth.config.RedisOAuth2AuthorizationRequestRepository;
 import wonjun.stiky.auth.config.JwtAuthenticationFilter;
 import wonjun.stiky.auth.config.JwtTokenProvider;
 import wonjun.stiky.auth.config.OAuth2SuccessHandler;
@@ -32,7 +32,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomUserDetailsService customUserDetailsService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+    private final RedisOAuth2AuthorizationRequestRepository authorizationRequestRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${cors.allowed-origins}")
