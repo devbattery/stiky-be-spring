@@ -6,6 +6,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
+import wonjun.stiky.generated.tables.records.MemberRecord;
 import wonjun.stiky.member.domain.Member;
 
 @Repository
@@ -20,27 +21,29 @@ public class MemberRepository {
                 .fetchOptionalInto(Member.class);
     }
 
-    public Member save(Member member) {
+    public Long save(Member member) {
         if (member.getId() == null) {
             return insert(member);
         }
+
         return update(member);
     }
 
-    private Member insert(Member member) {
-        return dsl.insertInto(MEMBER)
+    private Long insert(Member member) {
+        MemberRecord record = dsl.insertInto(MEMBER)
                 .set(MEMBER.EMAIL, member.getEmail())
                 .set(MEMBER.PASSWORD, member.getPassword())
                 .set(MEMBER.NICKNAME, member.getNickname())
                 .set(MEMBER.ROLE, member.getRole())
                 .set(MEMBER.PROVIDER, member.getProvider())
                 .set(MEMBER.PROVIDER_ID, member.getProviderId())
-                .returning() // DB에서 생성된 ID 포함하여 반환
-                .fetchOne()
-                .into(Member.class);
+                .returning(MEMBER.ID)
+                .fetchOne();
+
+        return record.getId();
     }
 
-    private Member update(Member member) {
+    private Long update(Member member) {
         dsl.update(MEMBER)
                 .set(MEMBER.PASSWORD, member.getPassword())
                 .set(MEMBER.NICKNAME, member.getNickname())
@@ -49,7 +52,8 @@ public class MemberRepository {
                 .set(MEMBER.PROVIDER_ID, member.getProviderId())
                 .where(MEMBER.ID.eq(member.getId()))
                 .execute();
-        return member;
+
+        return member.getId();
     }
 
 }

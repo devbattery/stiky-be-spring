@@ -49,8 +49,8 @@ public class AuthService {
                 .provider("local")
                 .build();
 
-        Member savedMember = memberQueryService.save(member);
-        return SignupResponse.of(savedMember.getId());
+        Long savedId = memberQueryService.save(member);
+        return SignupResponse.of(savedId);
     }
 
     public TokenDto login(LoginRequest request) {

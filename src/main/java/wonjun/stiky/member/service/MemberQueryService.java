@@ -26,7 +26,7 @@ public class MemberQueryService {
     }
 
     @Transactional
-    public Member save(Member member) {
+    public Long save(Member member) {
         return memberRepository.save(member);
     }
 
